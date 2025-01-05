@@ -102,6 +102,9 @@ Run the Application
 In the app.py file, the "Yourpassword", please put your mysql password
 
 #Initialize Flask app
+
 app = Flask(__name__)
+
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:Yourpassword@localhost/inventory_db'
+
 app.config['SECRET_KEY'] = 'your_secret_key'
