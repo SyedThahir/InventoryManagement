@@ -82,7 +82,7 @@ pip install -r requirements.txt
 
 5. Configure the Database
    
-1. Create a MySQL database named inventory_db. :
+Create a MySQL database named inventory_db. :
    
 mysql -u root -p
 
@@ -90,11 +90,11 @@ CREATE DATABASE inventory_db;
 
 EXIT;
 
-2. Import the database schema using the provided backup file:
+Import the database schema using the provided backup file:
    
    mysql -u root -p inventory_db < inventory_db.sql
 
-3. Run the Application
+Run the Application
    
    python app.py
 
