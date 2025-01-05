@@ -3,7 +3,9 @@ This is a Flask-based web application for managing inventory, suppliers, and tra
 
 Features
 
-User Authentication: Secure login with hashed passwords.
+User Authentication: 
+Secure login with hashed passwords.
+
 Role-Based Access Control (RBAC):
 
 Admin:
