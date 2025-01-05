@@ -57,6 +57,7 @@ Add the directory containing mysql.exe (e.g., C:\Program Files\MySQL\MySQL Serve
 Clone the repository to your local machine:
 
 git clone https://github.com/SyedThahir/InventoryManagement.git
+
 cd InventoryManagement
 
 4. Set Up the Virtual Environment
