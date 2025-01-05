@@ -60,7 +60,7 @@ git clone https://github.com/SyedThahir/InventoryManagement.git
 
 cd InventoryManagement
 
-4. Set Up the Virtual Environment
+3. Set Up the Virtual Environment
    
 Windows:
 
@@ -80,7 +80,7 @@ Install the required Python packages:
 
 pip install -r requirements.txt
 
-6. Configure the Database
+5. Configure the Database
    
 1. Create a MySQL database named inventory_db. :
    
@@ -90,11 +90,11 @@ CREATE DATABASE inventory_db;
 
 EXIT;
 
-3. Import the database schema using the provided backup file:
+2. Import the database schema using the provided backup file:
    
    mysql -u root -p inventory_db < inventory_db.sql
 
-5. Run the Application
+3. Run the Application
    
    python app.py
 
