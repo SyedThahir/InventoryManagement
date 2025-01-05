@@ -4,43 +4,60 @@ This is a Flask-based web application for managing inventory, suppliers, and tra
 Features
 
 User Authentication: 
+
 Secure login with hashed passwords.
 
 Role-Based Access Control (RBAC):
 
 Admin:
+
 Add, edit, and delete products, suppliers, and transactions.
+
 Manage users (add and delete users with admin or user roles).
 
 User:
+
 View products, suppliers, and transactions.
 
 CRUD Operations:
+
 Products: Add, edit, delete, and view products.
+
 Suppliers: Manage supplier information.
+
 Transactions: Record stock additions and removals.
 
 Secure Database Operations:
+
 Prevents SQL injection through parameterized queries.
+
 Implements cascading deletes for dependent records.
 
 
 Technologies Used
 
 Backend:
+
 Flask (Python web framework)
+
 Flask-Login (User authentication)
+
 Flask-SQLAlchemy (Database ORM)
+
 Flask-Bcrypt (Password hashing)
 
 Frontend:
+
 HTML
-CSS (Custom styling)
+
+CSS 
 
 Database:
+
 MySQL
 
 Deployment:
+
 Localhost (development)
 
 # Installation
