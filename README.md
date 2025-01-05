@@ -41,7 +41,7 @@ MySQL
 Deployment:
 Localhost (development)
 
-Installation
+# Installation
 
 1. Ensure Python and MySQL Are Added to PATH
 For Python:
@@ -55,10 +55,11 @@ Add the directory containing mysql.exe (e.g., C:\Program Files\MySQL\MySQL Serve
 
 2. Clone the Repository
 Clone the repository to your local machine:
+
 git clone https://github.com/SyedThahir/InventoryManagement.git
 cd InventoryManagement
 
-3. Set Up the Virtual Environment
+4. Set Up the Virtual Environment
 Windows:
 python -m venv venv
 venv\Scripts\activate
@@ -73,11 +74,12 @@ pip install -r requirements.txt
 
 5. Configure the Database
 1. Create a MySQL database named inventory_db. :
+   
 mysql -u root -p
 CREATE DATABASE inventory_db;
 EXIT;
 
-2. Import the database schema using the provided backup file:
+3. Import the database schema using the provided backup file:
    mysql -u root -p inventory_db < inventory_db.sql
 
 5. Run the Application
