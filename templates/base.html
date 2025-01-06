@@ -11,11 +11,11 @@
         <h1>Inventory Management System</h1>
         {% if current_user.is_authenticated %}
         <nav>
-            <a href="/">Dashboard</a>
-            <a href="/products">Products</a>
-            <a href="/suppliers">Suppliers</a>
-            <a href="/transactions">Transactions</a>
-            <a href="/logout">Logout</a>
+            <a href="{{ url_for('dashboard') }}">Dashboard</a>
+            <a href="{{ url_for('products') }}">Products</a>
+            <a href="{{ url_for('suppliers') }}">Suppliers</a>
+            <a href="{{ url_for('transactions') }}">Transactions</a>
+            <a href="{{ url_for('logout') }}">Logout</a>
         </nav>
         {% endif %}
     </header>
