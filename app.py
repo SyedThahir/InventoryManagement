@@ -2,19 +2,24 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from flask_bcrypt import Bcrypt
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from functools import wraps
 
 # Initialize Flask app
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:Yourpassword@localhost/inventory_db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:Pa$$w0rd@localhost/inventory_db'
 app.config['SECRET_KEY'] = 'your_secret_key'
 
-#yes
 # Initialize extensions
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
+
+# Initialize Flask-Limiter for rate-limiting
+limiter = Limiter(key_func=get_remote_address)
+limiter.init_app(app)
 
 # User Model
 class User(db.Model, UserMixin):
@@ -22,7 +27,7 @@ class User(db.Model, UserMixin):
     UserID = db.Column(db.Integer, primary_key=True)
     Username = db.Column(db.String(50), unique=True, nullable=False)
     PasswordHash = db.Column(db.String(255), nullable=False)
-    Role = db.Column(db.String(10), nullable=False)  
+    Role = db.Column(db.String(10), nullable=False)
 
     # Override get_id to use UserID instead of id
     def get_id(self):
@@ -50,7 +55,7 @@ class Supplier(db.Model):
 class Transaction(db.Model):
     __tablename__ = 'Transactions'
     TransactionID = db.Column(db.Integer, primary_key=True)
-    ProductID = db.Column(db.Integer, db.ForeignKey('Products.ProductID', ondelete='CASCADE'))  # Cascade Delete
+    ProductID = db.Column(db.Integer, db.ForeignKey('Products.ProductID', ondelete='CASCADE'))
     Quantity = db.Column(db.Integer, nullable=False)
     Date = db.Column(db.DateTime, default=db.func.current_timestamp())
     Type = db.Column(db.String(10))  # 'Add' or 'Remove'
@@ -65,13 +70,14 @@ def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not current_user.is_authenticated or current_user.Role != 'admin':
-            flash("You don't have permission to access this page.", 'danger')
-            return redirect(url_for('dashboard'))
+            flash("Access denied: Admin privileges required.", 'danger')
+            return redirect(url_for('error_page'))
         return f(*args, **kwargs)
     return decorated_function
 
-# Route: Login
+# Route: Login with rate-limiting
 @app.route('/login', methods=['GET', 'POST'])
+@limiter.limit("5 per minute")  # Rate-limit: 5 requests per minute per IP
 def login():
     if request.method == 'POST':
         username = request.form['username']
@@ -81,9 +87,13 @@ def login():
             login_user(user)
             flash('Login successful!', 'success')
             return redirect(url_for('dashboard'))
-        else:
-            flash('Invalid credentials. Please try again.', 'danger')
+        flash('Invalid credentials. Please try again.', 'danger')
     return render_template('login.html')
+
+# Custom rate-limit exceeded error handler
+@app.errorhandler(429)
+def rate_limit_exceeded(e):
+    return render_template('error_page.html', message="Too many requests. Please try again later."), 429
 
 # Route: Dashboard
 @app.route('/')
@@ -123,7 +133,7 @@ def admin_dashboard():
 def delete_user(user_id):
     user = User.query.get_or_404(user_id)
     if user.Username == 'admin':
-        flash("You cannot delete the default admin user!", 'danger')
+        flash("Cannot delete the default admin user.", 'danger')
         return redirect(url_for('admin_dashboard'))
     db.session.delete(user)
     db.session.commit()
@@ -157,12 +167,11 @@ def products():
 @app.route('/delete_product/<int:product_id>', methods=['POST'])
 @login_required
 def delete_product(product_id):
-    if current_user.Role != 'admin':  # Only admins can delete products
-        flash("You don't have permission to delete products.", 'danger')
+    if current_user.Role != 'admin':
+        flash("Permission denied: Only admins can delete products.", 'danger')
         return redirect(url_for('products'))
-    
     product = Product.query.get_or_404(product_id)
-    db.session.delete(product)  # This will trigger the cascading delete
+    db.session.delete(product)
     db.session.commit()
     flash('Product and its associated transactions deleted successfully!', 'success')
     return redirect(url_for('products'))
@@ -186,23 +195,18 @@ def suppliers():
 @app.route('/delete_supplier/<int:supplier_id>', methods=['POST'])
 @login_required
 def delete_supplier(supplier_id):
-    if current_user.Role != 'admin':  # Only admins can delete suppliers
-        flash("You don't have permission to delete suppliers.", 'danger')
+    if current_user.Role != 'admin':
+        flash("Permission denied: Only admins can delete suppliers.", 'danger')
         return redirect(url_for('suppliers'))
-    
     supplier = Supplier.query.get_or_404(supplier_id)
-    
-    # Check if any products are associated with this supplier
     associated_products = Product.query.filter_by(SupplierID=supplier_id).all()
     if associated_products:
-        flash("Cannot delete supplier because it has associated products.", 'danger')
+        flash("Cannot delete supplier with associated products.", 'danger')
         return redirect(url_for('suppliers'))
-
     db.session.delete(supplier)
     db.session.commit()
     flash('Supplier deleted successfully!', 'success')
     return redirect(url_for('suppliers'))
-
 
 # Route: Transactions
 @app.route('/transactions', methods=['GET', 'POST'])
@@ -215,15 +219,13 @@ def transactions():
         new_transaction = Transaction(ProductID=product_id, Quantity=quantity, Type=transaction_type)
         product = Product.query.get(product_id)
 
-        # Update stock based on transaction type
         if transaction_type == 'Add':
             product.StockQuantity += quantity
-        elif transaction_type == 'Remove':
-            if product.StockQuantity >= quantity:
-                product.StockQuantity -= quantity
-            else:
-                flash('Not enough stock for this transaction!', 'danger')
-                return redirect(url_for('transactions'))
+        elif transaction_type == 'Remove' and product.StockQuantity >= quantity:
+            product.StockQuantity -= quantity
+        else:
+            flash('Not enough stock for this transaction!', 'danger')
+            return redirect(url_for('transactions'))
 
         db.session.add(new_transaction)
         db.session.commit()
@@ -231,6 +233,11 @@ def transactions():
     transactions = Transaction.query.all()
     products = Product.query.all()
     return render_template('transactions.html', transactions=transactions, products=products)
+
+# Route: Error Page
+@app.route('/error_page')
+def error_page():
+    return render_template('error_page.html', message="Access denied: You do not have permission to access this page.")
 
 # Ensure the database is created and set up a default admin user
 if __name__ == '__main__':
