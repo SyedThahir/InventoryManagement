@@ -8,7 +8,7 @@ from functools import wraps
 
 # Initialize Flask app
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:Pa$$w0rd@localhost/inventory_db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:Yourpassword@localhost/inventory_db'
 app.config['SECRET_KEY'] = 'your_secret_key'
 
 # Initialize extensions
